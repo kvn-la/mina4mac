@@ -58,7 +58,7 @@ them. Every LuaJIT object lives in the guest heap, so the pointers the guest see
 | `thread.c` | guest threads: `_beginthreadex`/`_endthreadex`, Wait/GetExitCode/ResumeThread on thread handles |
 | `shlwapi.c`, `shell32.c` | SHLWAPI (PathAppendW); SHELL32 known folders, directory creation and ShellExecuteA (URLs and folders go to macOS `open`), ole32 CoTaskMemFree |
 | `galaxy.c` | GOG Galaxy stubbed offline: the interface accessors return NULL, which the game checks |
-| `wininet.c` | WININET offline: `InternetOpenA` fails (ERROR_INTERNET_NAME_NOT_RESOLVED), and so does the rest |
+| `wininet.c` | WININET over libcurl (the backend request: daily run seeds, latest version); `MINA4MAC_OFFLINE=1` makes `InternetOpenA` fail as before |
 | `ws2_32.c` | WS2_32 offline: `WSAStartup` fails (WSASYSNOTREADY), the rest fail with WSANOTINITIALISED |
 | `user32.c` | USER32/COMDLG32: `GetActiveWindow` is NULL, `GetOpenFileNameA` is cancelled |
 | `fmod.c`, `fmod.h` | FMOD Studio/core bridged to the native macOS FMOD Engine (dlopened from `build/fmod_api/lib`, installed by `tools/setup_fmod.sh`; `MINA4MAC_AUDIO=fmod\|stub`, `MINA4MAC_FMOD=<lib dir>`): 32-bit generation-checked handles into a host table, instance handles retired on FMOD's DESTROYED callback, the game's callbacks run on FMOD's Studio thread (which gets a guest thread) with marker/beat parameters copied to the guest stack |

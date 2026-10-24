@@ -539,10 +539,35 @@ static void sdl_main_imports(CPU *cp) {
     CHECK("glGetString, no context", (call(&c, "opengl32.dll", "glGetString", 1, (uint32_t[]){0x1f00}), c.eax), 0);
     CHECK("glCreateShader, no context: 0", (call(&c, "opengl32.dll", "glCreateShader", 1, (uint32_t[]){0x8b31}), c.eax), 0);
     CHECK("glShaderSource, no context: pops 16", call(&c, "opengl32.dll", "glShaderSource", 4, (uint32_t[]){1, 1, 0, 0}), c.esp);
-    // WININET offline: no session, ERROR_INTERNET_NAME_NOT_RESOLVED.
-    CHECK("InternetOpenA: pops 20", call(&c, "WININET.dll", "InternetOpenA", 5, (uint32_t[]){0, 0, 0, 0, 0}), c.esp);
+    // WININET with MINA4MAC_OFFLINE=1: no session, ERROR_INTERNET_NAME_NOT_RESOLVED.
+    setenv("MINA4MAC_OFFLINE", "1", 1);
+    CHECK("InternetOpenA offline: pops 20", call(&c, "WININET.dll", "InternetOpenA", 5, (uint32_t[]){0, 0, 0, 0, 0}), c.esp);
     CHECK("... fails", c.eax, 0);
     CHECK("... last error 12007", K32("GetLastError"), 12007);
+    unsetenv("MINA4MAC_OFFLINE");
+    // Online: handles chain session -> connect -> request (no request is sent here: tests stay offline).
+    uint32_t inet = (call(&c, "WININET.dll", "InternetOpenA", 5, (uint32_t[]){gs(""), 1, 0, 0, 0}), c.eax);
+    CHECK("InternetOpenA: a session", inet != 0, 1);
+    CHECK("InternetConnectA: pops 32", call(&c, "WININET.dll", "InternetConnectA", 8,
+                                            (uint32_t[]){inet, gs("example.invalid"), 443, gs(""), gs(""), 3, 0, 0}), c.esp);
+    uint32_t icon = c.eax;
+    CHECK("... a connection", icon != 0, 1);
+    CHECK("HttpOpenRequestA: pops 32", call(&c, "WININET.dll", "HttpOpenRequestA", 8,
+                                            (uint32_t[]){icon, gs("GET"), gs("callback/"), gs("HTTP/1.0"), gs(""), 0, 0x84800300, 0}), c.esp);
+    uint32_t ireq = c.eax;
+    CHECK("... a request", ireq != 0, 1);
+    CHECK("HttpOpenRequestA on a session fails", (call(&c, "WININET.dll", "HttpOpenRequestA", 8,
+                                                       (uint32_t[]){inet, gs("GET"), gs("/"), 0, 0, 0, 0, 0}), c.eax), 0);
+    uint32_t iread = heap_alloc(4), ibuf = heap_alloc(16);
+    wr32(iread, 7);
+    CHECK("InternetReadFile before sending: pops 16", call(&c, "WININET.dll", "InternetReadFile", 4, (uint32_t[]){ireq, ibuf, 16, iread}), c.esp);
+    CHECK("... TRUE, 0 bytes", c.eax == 1 && rd32(iread) == 0, 1);
+    for (int i = 0; i < 3; i++) {
+        uint32_t h = (uint32_t[]){ireq, icon, inet}[i];
+        CHECK("InternetCloseHandle: TRUE", (call(&c, "WININET.dll", "InternetCloseHandle", 1, (uint32_t[]){h}), c.eax), 1);
+    }
+    CHECK("InternetCloseHandle twice: FALSE", (call(&c, "WININET.dll", "InternetCloseHandle", 1, (uint32_t[]){inet}), c.eax), 0);
+    CHECK("InternetCloseHandle(NULL): FALSE", (call(&c, "WININET.dll", "InternetCloseHandle", 1, (uint32_t[]){0}), c.eax), 0);
 
     snprintf(p, sizeof p, "rm -rf '%s'", tmp);
     CHECK("cleanup", system(p), 0);

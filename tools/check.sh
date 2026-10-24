@@ -80,7 +80,7 @@ fi
 # envtest needs build/noita/image.bin, which difftest writes, and build/gen_all/gl_gen.c (tools/gen_gl.py via build_all).
 # The launcher's runtime files (build_all.py LAUNCHER) minus main.c.
 HLE=$(sed -nE 's/^LAUNCHER = \((.*)\).*/\1/p' tools/build_all.py | tr -d '",' | tr ' ' '\n' | grep -v '^main.c$' | sed 's|^|runtime/|')
-if clang -O2 -ffp-contract=off -fno-strict-aliasing -Wall -Wextra -Werror -I runtime runtime/env_test.c runtime/rt.c -framework OpenGL \
+if clang -O2 -ffp-contract=off -fno-strict-aliasing -Wall -Wextra -Werror -I runtime runtime/env_test.c runtime/rt.c -framework OpenGL -lcurl \
         $HLE build/gen_all/gl_gen.c -o build/envtest >"$LOG/envtest.log" 2>&1 \
         && build/envtest build/noita/image.bin "${NOITA_DIR:-build/game}/msvcp120.dll" >>"$LOG/envtest.log" 2>&1; then
     echo "envtest: ok $(grep -c ' ok ' "$LOG/envtest.log") checks"

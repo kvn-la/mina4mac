@@ -144,6 +144,10 @@ in bug reports.
   bundled SDL3. Update mina4mac (`git pull`) and run steps 5 and 6 again.
 - **"Noita install not found" when opening the app**: the game folder moved or was deleted. Run steps 5 and 6
   again with its new location.
+- **Daily run says it couldn't connect**: the game fetches the daily seeds from Nolla's server
+  (`takapuoli.noitagame.com`). The log has a `wininet:` line with the result. A firewall
+  or no network gives the same message as on Windows. To keep the game offline, start it with
+  `MINA4MAC_OFFLINE=1`.
 - **Crashes or other bugs**: [open an issue](https://github.com/paulstraw/mina4mac/issues) with your Mac's chip
   and macOS version, and attach the log, `~/Library/Logs/mina4mac.log`. The previous launch's log is
   `mina4mac.log.1`, so it survives one relaunch.
