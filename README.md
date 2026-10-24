@@ -2,8 +2,7 @@
 
 > **This is a personal fork of [paulstraw/mina4mac](https://github.com/paulstraw/mina4mac).** All the credit for
 > the project goes there. The only difference here is that the game can go online, so daily runs work (see
-> `runtime/wininet.c`). The change has been offered upstream, and this fork exists only until it's merged or the
-> author decides against it. For anything else, use the original project. Problems with daily runs or other online
+> `runtime/wininet.c`). For anything else, use the original project. Problems with daily runs or other online
 > features belong in [this fork's issues](https://github.com/kvn-la/mina4mac/issues).
 
 Native Noita on Apple Silicon, without Wine or Rosetta. `noita.exe` (32-bit x86) is statically recompiled to C
